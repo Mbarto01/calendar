@@ -97,7 +97,7 @@ const calendarContainer=document.getElementById("calendar-container");
 const picker=document.getElementById("picker");
 let selectedDay=null;
 
-// ===== LOGIN MOBILE/STABILE =====
+// ===== LOGIN =====
 const loginScreen = document.getElementById("login-screen");
 const loginBtn = document.getElementById("login-btn");
 const passwordInput = document.getElementById("login-password");
@@ -184,7 +184,7 @@ function renderMonth(year,month,prepend=false){
   else{ calendarContainer.appendChild(monthBlock); monthsList.push({year,month,element:monthBlock}); }
 }
 
-// Generazione mesi
+// Generazione mesi iniziali
 for(let i=24;i>0;i--){ let d=new Date(today.getFullYear(),today.getMonth()-i,1); renderMonth(d.getFullYear(),d.getMonth(), true);}
 renderMonth(today.getFullYear(),today.getMonth(), false);
 for(let i=1;i<=24;i++){ let d=new Date(today.getFullYear(),today.getMonth()+i,1); renderMonth(d.getFullYear(),d.getMonth(), false);}
@@ -206,7 +206,7 @@ calendarContainer.addEventListener("scroll",()=>{
   }
 });
 
-// Picker con sincronizzazione Firebase
+// Picker e Firebase
 function setColor(color){
   if(!selectedDay) return;
   selectedDay.style.backgroundColor=color;
@@ -229,9 +229,9 @@ function removeColor(){
   removeColorFirebase(monthKey, dayNum);
   closePicker();
 }
-function closePicker(){ if(selectedDay) selectedDay.style.border="2px solid transparent"; picker.style.display="none"; selectedDay=null;}
+function closePicker(){ if(selectedDay) selectedDay.style.border="2px solid transparent"; picker.style.display="none"; selectedDay=null; }
 
-// Caricamento colori da Firebase
+// Carica colori da Firebase
 listenColorsFirebase(data=>{
   if(!data) return;
   Object.keys(data).forEach(monthKey=>{
@@ -249,18 +249,22 @@ listenColorsFirebase(data=>{
   });
 });
 
-// SPLASH con scroll solo quando calendario pronto
-function showLoginAfterReady(){
-  const block = monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth());
-  if(!block) return setTimeout(showLoginAfterReady,50);
-  splash.style.display="none";
-  loginScreen.style.display="block";
-  calendarContainer.style.pointerEvents='none';
-  block.element.scrollIntoView({behavior:"smooth", block:"start"});
-}
-const splash=document.getElementById("splash-screen");
+// ===== SPLASH DEFINITIVA =====
 const splashIcon=document.getElementById("splash-icon");
-splashIcon.addEventListener("animationend", showLoginAfterReady);
+async function hideSplash(){
+  // aspetta calendario e Firebase
+  function waitCalendar(){ return new Promise(r=>{ const check=()=>{ const b=monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth()); b?r(b):setTimeout(check,50); }; check(); }); }
+  function waitFirebase(){ return new Promise(r=>{ listenColorsFirebase(_=>r()); }); }
+  const monthBlock = await Promise.all([waitCalendar(), waitFirebase()]).then(v=>v[0]);
+  // attendi fine animazione
+  splashIcon.addEventListener("animationend", ()=>{
+    splash.style.display="none";
+    loginScreen.style.display="block";
+    calendarContainer.style.pointerEvents='none';
+    monthBlock.element.scrollIntoView({behavior:"smooth", block:"start"});
+  });
+}
+hideSplash();
 </script>
 </body>
 </html>
