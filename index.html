@@ -1,50 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-  <title>Calendar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; font-weight:600; text-align:center; background:#f7f7f7; color:#333; margin:0; padding-top:60px;}
-    .top-bar { position:fixed; top:0; left:0; width:100%; height:60px; background:#000; display:flex; justify-content:center; align-items:center; color:#fff; font-family:"Mongolian Baiti", serif; font-weight:600; font-size:20px; z-index:3000;}
-    .calendar-container { display:flex; flex-direction:column; gap:30px; padding:10px; height:calc(100vh-60px); overflow-y:auto;}
-    .month-block { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; max-width:100%; margin:0 auto;}
-    .month-name { grid-column:span 7; font-weight:700; margin:10px 0; font-size:18px;}
-    .day, .weekday { display:flex; justify-content:center; align-items:center; border-radius:50%; border:2px solid transparent; transition:transform 0.1s, box-shadow 0.1s, border 0.1s, background-color 0.3s; font-size:14px;}
-    .weekday { background:#eee; font-weight:700;}
-    .day { background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); min-width:40px; min-height:40px;}
-    .day:hover { transform:scale(1.1); box-shadow:0 4px 8px rgba(0,0,0,0.2);}
-    .picker { display:none; position:fixed; top:40%; left:50%; transform:translate(-50%, -50%); background:#fff; border:1px solid #aaa; border-radius:10px; padding:15px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:90%; max-width:200px;}
-    .color-btn { width:40px; height:40px; border-radius:50%; border:2px solid #ccc; margin:5px; cursor:pointer; transition:transform 0.1s, border-color 0.1s;}
-    .color-btn:hover { transform:scale(1.2); border-color:#888;}
-    .close-btn, .remove-btn { margin:5px; padding:5px 12px; cursor:pointer; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
-    .close-btn:hover, .remove-btn:hover { background:#ccc;}
-    @media (max-width:450px){ .day,.weekday{min-width:35px; min-height:35px; font-size:12px;} .color-btn{width:35px;height:35px;} .month-name{font-size:16px;} }
+<meta charset="UTF-8">
+<title>Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; font-weight:600; margin:0; padding-top:60px; background:#f7f7f7; color:#333; text-align:center;}
+.top-bar { position:fixed; top:0; left:0; width:100%; height:60px; background:#000; color:#fff; font-family:"Mongolian Baiti", serif; font-weight:600; display:flex; justify-content:center; align-items:center; z-index:3000;}
+.calendar-container { display:flex; flex-direction:column; gap:30px; padding:10px; height:calc(100vh-60px); overflow-y:auto;}
+.month-block { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; max-width:100%; margin:0 auto;}
+.month-name { grid-column:span 7; font-weight:700; margin:10px 0; font-size:18px;}
+.day, .weekday { display:flex; justify-content:center; align-items:center; border-radius:50%; border:2px solid transparent; transition:0.2s; font-size:14px;}
+.weekday { background:#eee; font-weight:700;}
+.day { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.1); min-width:40px; min-height:40px;}
+.day:hover { transform:scale(1.1); box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+.picker { display:none; position:fixed; top:40%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:10px; padding:15px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:90%; max-width:200px;}
+.color-btn { width:40px; height:40px; border-radius:50%; margin:5px; cursor:pointer; border:2px solid #ccc;}
+.color-btn:hover { transform:scale(1.2); border-color:#888;}
+.close-btn, .remove-btn { margin:5px; padding:5px 12px; cursor:pointer; border:none; border-radius:5px; background:#ddd;}
+.close-btn:hover, .remove-btn:hover { background:#ccc;}
+@media (max-width:450px){ .day,.weekday{min-width:35px; min-height:35px; font-size:12px;} .color-btn{width:35px;height:35px;} .month-name{font-size:16px;} }
 
-    /* LOGIN stabile su mobile */
-    #login-screen { 
-      position:fixed; top:0; left:0; width:100%; height:100%; 
-      background:#f7f7f7; display:block; text-align:center; padding-top:80px; overflow:auto; z-index:2000; 
-    }
-    #login-password { 
-      padding:8px; font-size:16px; margin-bottom:10px; width:80%; max-width:300px; 
-      -webkit-text-fill-color:#000; -webkit-appearance:none; caret-color:#000;
-    }
-    #login-screen button { padding:10px 16px; font-size:18px; cursor:pointer; margin-top:8px; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
-    #login-screen button:hover { background:#ccc; }
+/* Login */
+#login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#f7f7f7; display:block; text-align:center; padding-top:80px; overflow:auto; z-index:2000; }
+#login-password { padding:8px; font-size:16px; margin-bottom:10px; width:80%; max-width:300px; -webkit-text-fill-color:#000; caret-color:#000;}
+#login-screen button { padding:10px 16px; font-size:18px; cursor:pointer; margin-top:8px; border:none; border-radius:5px; background:#ddd; transition:0.2s;}
+#login-screen button:hover { background:#ccc; }
 
-    /* SPLASH */
-    #splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; display:flex; justify-content:center; align-items:center; z-index:4000; flex-direction: column; }
-    @keyframes pulseBig {0%{transform:scale(0.7); opacity:0.5;}50%{transform:scale(1.7); opacity:1;}100%{transform:scale(1); opacity:1;}}
-    #splash-icon { animation:pulseBig 1.5s ease-in-out forwards;}
-    #splash-credit, #splash-version { position:absolute; font-family:"Mongolian Baiti", serif; color:#000; opacity:1;}
-    #splash-credit { bottom:15px; left:50%; transform:translateX(-50%); font-size:14px;}
-    #splash-version { bottom:15px; right:20px; font-size:12px;}
-  </style>
+/* Splash */
+#splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:4000; }
+#splash-icon { width:120px; height:120px; animation: pulseBig 1.5s ease-in-out forwards; }
+@keyframes pulseBig {0%{transform:scale(0.7); opacity:0.5;}50%{transform:scale(1.7); opacity:1;}100%{transform:scale(1); opacity:1;}}
+#splash-credit, #splash-version { position:absolute; font-family:"Mongolian Baiti", serif; color:#000;}
+#splash-credit { bottom:15px; left:50%; transform:translateX(-50%); font-size:14px;}
+#splash-version { bottom:15px; right:20px; font-size:12px;}
+</style>
 </head>
 <body>
 
 <div id="splash-screen">
-  <img src="icon-192.png" id="splash-icon" style="width:120px;height:120px;">
+  <img src="icon-192.png" id="splash-icon">
   <div id="splash-credit">Created by Russel</div>
   <div id="splash-version">v 1.0</div>
 </div>
@@ -71,25 +66,24 @@
 
 <!-- FIREBASE -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.24.0/firebase-app.js";
-  import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.24.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.24.0/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.24.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAy3oUdCx5-sWiGCMq2eo70bbKSdACdplA",
-    authDomain: "calendarsync-c39e1.firebaseapp.com",
-    databaseURL: "https://calendarsync-c39e1-default-rtdb.firebaseio.com",
-    projectId: "calendarsync-c39e1",
-    storageBucket: "calendarsync-c39e1.appspot.com",
-    messagingSenderId: "767503496074",
-    appId: "1:767503496074:web:d90b599786000d617b0e73"
-  };
+const firebaseConfig = {
+apiKey: "AIzaSyAy3oUdCx5-sWiGCMq2eo70bbKSdACdplA",
+authDomain: "calendarsync-c39e1.firebaseapp.com",
+databaseURL: "https://calendarsync-c39e1-default-rtdb.firebaseio.com",
+projectId: "calendarsync-c39e1",
+storageBucket: "calendarsync-c39e1.appspot.com",
+messagingSenderId: "767503496074",
+appId: "1:767503496074:web:d90b599786000d617b0e73"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  window.saveColorFirebase = function(monthKey, dayNum, color){ set(ref(db, `colors/${monthKey}/${dayNum}`), color); }
-  window.removeColorFirebase = function(monthKey, dayNum){ remove(ref(db, `colors/${monthKey}/${dayNum}`)); }
-  window.listenColorsFirebase = function(callback){ onValue(ref(db, 'colors'), snapshot => { callback(snapshot.val()); }); }
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+window.saveColorFirebase = (monthKey, dayNum, color)=> set(ref(db, `colors/${monthKey}/${dayNum}`), color);
+window.removeColorFirebase = (monthKey, dayNum)=> remove(ref(db, `colors/${monthKey}/${dayNum}`));
+window.listenColorsFirebase = (callback)=> onValue(ref(db, 'colors'), snapshot => { callback(snapshot.val()); });
 </script>
 
 <script>
@@ -120,14 +114,6 @@ function login() {
 loginBtn.addEventListener("click", login);
 passwordInput.addEventListener("keydown", e => { if(e.key==="Enter") login(); });
 passwordInput.addEventListener("focus", () => { setTimeout(()=>{ passwordInput.scrollIntoView({behavior:"smooth", block:"center"}); },50); });
-document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState==="visible"){
-    loginScreen.style.display='block';
-    calendarContainer.style.pointerEvents='none';
-    passwordInput.value='';
-    document.getElementById("login-error").style.display='none';
-  }
-});
 
 // ===== CALENDARIO =====
 const monthNames=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
@@ -185,9 +171,18 @@ function renderMonth(year,month,prepend=false){
 }
 
 // Generazione mesi iniziali
-for(let i=24;i>0;i--){ let d=new Date(today.getFullYear(),today.getMonth()-i,1); renderMonth(d.getFullYear(),d.getMonth(), true);}
-renderMonth(today.getFullYear(),today.getMonth(), false);
-for(let i=1;i<=24;i++){ let d=new Date(today.getFullYear(),today.getMonth()+i,1); renderMonth(d.getFullYear(),d.getMonth(), false);}
+function generateInitialMonths(){
+  for(let i=24;i>0;i--){ let d=new Date(today.getFullYear(),today.getMonth()-i,1); renderMonth(d.getFullYear(),d.getMonth(), true);}
+  renderMonth(today.getFullYear(),today.getMonth(), false);
+  for(let i=1;i<=24;i++){ let d=new Date(today.getFullYear(),today.getMonth()+i,1); renderMonth(d.getFullYear(),d.getMonth(), false);}
+}
+generateInitialMonths();
+
+// Scroll iniziale sul mese corrente
+setTimeout(()=>{ 
+  const currentMonth = monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth());
+  if(currentMonth) currentMonth.element.scrollIntoView({behavior:"smooth", block:"start"});
+},1600); // dopo splash
 
 // Scroll infinito
 calendarContainer.addEventListener("scroll",()=>{
@@ -206,7 +201,7 @@ calendarContainer.addEventListener("scroll",()=>{
   }
 });
 
-// Picker e Firebase
+// Picker
 function setColor(color){
   if(!selectedDay) return;
   selectedDay.style.backgroundColor=color;
@@ -231,40 +226,8 @@ function removeColor(){
 }
 function closePicker(){ if(selectedDay) selectedDay.style.border="2px solid transparent"; picker.style.display="none"; selectedDay=null; }
 
-// Carica colori da Firebase
-listenColorsFirebase(data=>{
-  if(!data) return;
-  Object.keys(data).forEach(monthKey=>{
-    Object.keys(data[monthKey]).forEach(dayNum=>{
-      const color=data[monthKey][dayNum];
-      const monthBlock = monthsList.find(m=>m.year+'-'+m.month===monthKey);
-      if(monthBlock){
-        const day=Array.from(monthBlock.element.getElementsByClassName('day')).find(d=>d.innerText==dayNum);
-        if(day) day.style.backgroundColor=color;
-      }
-      const savedColors=JSON.parse(localStorage.getItem(monthKey))||{};
-      savedColors[dayNum]=color;
-      localStorage.setItem(monthKey,JSON.stringify(savedColors));
-    });
-  });
-});
-
-// ===== SPLASH DEFINITIVA =====
-const splashIcon=document.getElementById("splash-icon");
-async function hideSplash(){
-  // aspetta calendario e Firebase
-  function waitCalendar(){ return new Promise(r=>{ const check=()=>{ const b=monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth()); b?r(b):setTimeout(check,50); }; check(); }); }
-  function waitFirebase(){ return new Promise(r=>{ listenColorsFirebase(_=>r()); }); }
-  const monthBlock = await Promise.all([waitCalendar(), waitFirebase()]).then(v=>v[0]);
-  // attendi fine animazione
-  splashIcon.addEventListener("animationend", ()=>{
-    splash.style.display="none";
-    loginScreen.style.display="block";
-    calendarContainer.style.pointerEvents='none';
-    monthBlock.element.scrollIntoView({behavior:"smooth", block:"start"});
-  });
-}
-hideSplash();
+// ===== SPLASH =====
+setTimeout(()=>{ document.getElementById("splash-screen").style.display="none"; loginScreen.style.display="block"; },1500);
 </script>
 </body>
 </html>
