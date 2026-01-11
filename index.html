@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; font-weight:600; text-align:center; background:#f7f7f7; color:#333; margin:0; padding-top:60px;}
+    .top-bar { position:fixed; top:0; left:0; width:100%; height:60px; background:#000; display:flex; justify-content:center; align-items:center; color:#fff; font-family:"Mongolian Baiti", serif; font-weight:600; font-size:20px; z-index:3000;}
+    .calendar-container { display:flex; flex-direction:column; gap:30px; padding:10px; height:calc(100vh-60px); overflow-y:auto;}
+    .month-block { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; max-width:100%; margin:0 auto;}
+    .month-name { grid-column:span 7; font-weight:700; margin:10px 0; font-size:18px;}
+    .day, .weekday { display:flex; justify-content:center; align-items:center; border-radius:50%; border:2px solid transparent; transition:transform 0.1s, box-shadow 0.1s, border 0.1s, background-color 0.3s; font-size:14px;}
+    .weekday { background:#eee; font-weight:700;}
+    .day { background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); min-width:40px; min-height:40px;}
+    .day:hover { transform:scale(1.1); box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+    .picker { display:none; position:fixed; top:40%; left:50%; transform:translate(-50%, -50%); background:#fff; border:1px solid #aaa; border-radius:10px; padding:15px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:90%; max-width:200px;}
+    .color-btn { width:40px; height:40px; border-radius:50%; border:2px solid #ccc; margin:5px; cursor:pointer; transition:transform 0.1s, border-color 0.1s;}
+    .color-btn:hover { transform:scale(1.2); border-color:#888;}
+    .close-btn, .remove-btn { margin:5px; padding:5px 12px; cursor:pointer; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
+    .close-btn:hover, .remove-btn:hover { background:#ccc;}
+    @media (max-width:450px){ .day,.weekday{min-width:35px; min-height:35px; font-size:12px;} .color-btn{width:35px;height:35px;} .month-name{font-size:16px;} }
+    #login-screen { 
+      position:fixed; top:0; left:0; width:100%; height:100%; 
+      background:#f7f7f7; display:flex; justify-content:center; align-items:center; flex-direction:column; 
+      z-index:2000; overflow:auto; /* scroll automatico se tastiera copre */ 
+    }
+    #login-password { 
+      padding:8px; font-size:16px; margin-bottom:10px; 
+      -webkit-text-fill-color:#000; /* risolve doppio cursore su iPhone */
+      -webkit-appearance:none;
+    }
+    #login-screen button { padding:10px 16px; font-size:18px; margin-top:8px; cursor:pointer; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
+    #login-screen button:hover { background:#ccc; }
+    #splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; display:flex; justify-content:center; align-items:center; z-index:4000; flex-direction: column; }
+    @keyframes pulseBig {0%{transform:scale(0.7); opacity:0.5;}50%{transform:scale(1.7); opacity:1;}100%{transform:scale(1); opacity:1;}}
+    #splash-icon { animation:pulseBig 1.5s ease-in-out forwards;}
+    #splash-credit, #splash-version { position:absolute; font-family:"Mongolian Baiti", serif; color:#000; opacity:1;}
+    #splash-credit { bottom:15px; left:50%; transform:translateX(-50%); font-size:14px;}
+    #splash-version { bottom:15px; right:20px; font-size:12px;}
+  </style>
+</head>
+<body>
+
+<div id="splash-screen">
+  <img src="icon-192.png" id="splash-icon" style="width:120px;height:120px;">
+  <div id="splash-credit">Created by Russel</div>
+  <div id="splash-version">v 1.0</div>
+</div>
+
+<div class="top-bar">Calendar</div>
+
+<div id="login-screen">
+  <h2>Inserisci password</h2>
+  <input type="password" id="login-password" placeholder="Password">
+  <button onclick="checkPassword()">Accedi</button>
+  <p id="login-error" style="color:red; display:none;">Password errata</p>
+</div>
+
+<div class="calendar-container" id="calendar-container"></div>
+
+<div class="picker" id="picker">
+  <button class="close-btn" onclick="closePicker()">X</button>
+  <div>
+    <button class="color-btn" style="background: green" onclick="setColor('green')"></button>
+    <button class="color-btn" style="background: red" onclick="setColor('red')"></button>
+  </div>
+  <button class="remove-btn" onclick="removeColor()">Rimuovi colore</button>
+</div>
+
+<script>
+const calendarContainer=document.getElementById("calendar-container");
+const picker=document.getElementById("picker");
+let selectedDay=null;
+const PASSWORD="123";
+
+function checkPassword(){
+  const pass=document.getElementById("login-password").value;
+  const errorMsg=document.getElementById("login-error");
+  const loginScreen=document.getElementById("login-screen");
+  if(pass===PASSWORD){ loginScreen.style.display="none"; calendarContainer.style.pointerEvents="auto"; }
+  else{ errorMsg.style.display="block"; }
+}
+
+calendarContainer.style.pointerEvents='none';
+document.addEventListener("visibilitychange",function(){
+  const loginScreen=document.getElementById("login-screen");
+  if(document.visibilityState==="visible"){
+    loginScreen.style.display="flex";
+    calendarContainer.style.pointerEvents="none";
+    document.getElementById("login-password").value="";
+    document.getElementById("login-error").style.display="none";
+  }
+});
+
+const monthNames=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+const weekdays=["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+let now=new Date();
+let today=new Date(now.getFullYear(), now.getMonth(),1);
+
+let monthsList=[];
+let generatedMonths={};
+
+function renderMonth(year,month,prepend=false){
+  const key=`${year}-${month}`;
+  if(generatedMonths[key]) return;
+  generatedMonths[key]=true;
+
+  const monthBlock=document.createElement("div");
+  monthBlock.className="month-block";
+  monthBlock.dataset.year=year;
+  monthBlock.dataset.month=month;
+
+  const monthTitle=document.createElement("div");
+  monthTitle.className="month-name";
+  monthTitle.innerText=monthNames[month]+" "+year;
+  monthBlock.appendChild(monthTitle);
+
+  weekdays.forEach(d=>{
+    const w=document.createElement("div");
+    w.className="weekday";
+    w.innerText=d;
+    monthBlock.appendChild(w);
+  });
+
+  const firstDay=new Date(year,month,1).getDay();
+  const offsetDays=firstDay===0?6:firstDay-1;
+  for(let i=0;i<offsetDays;i++) monthBlock.appendChild(document.createElement("div"));
+
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const monthKey=key;
+  const savedColors=JSON.parse(localStorage.getItem(monthKey))||{};
+
+  for(let i=1;i<=daysInMonth;i++){
+    const day=document.createElement("div");
+    day.className="day";
+    day.innerText=i;
+    if(savedColors[i]) day.style.backgroundColor=savedColors[i];
+    day.addEventListener("click",function(){
+      if(selectedDay) selectedDay.style.border="2px solid transparent";
+      selectedDay=day;
+      selectedDay.monthKey=monthKey;
+      selectedDay.style.border="2px solid blue";
+      picker.style.display="block";
+    });
+    monthBlock.appendChild(day);
+  }
+
+  if(prepend){ calendarContainer.prepend(monthBlock); monthsList.unshift({year,month,element:monthBlock}); }
+  else{ calendarContainer.appendChild(monthBlock); monthsList.push({year,month,element:monthBlock}); }
+}
+
+// generazione infinita intorno al mese corrente
+for(let i=0;i<50;i++){
+  let dPrev=new Date(today.getFullYear(), today.getMonth()-i,1);
+  renderMonth(dPrev.getFullYear(), dPrev.getMonth(), true);
+  let dNext=new Date(today.getFullYear(), today.getMonth()+i,1);
+  renderMonth(dNext.getFullYear(), dNext.getMonth(), false);
+}
+
+// scroll infinito dinamico
+calendarContainer.addEventListener("scroll",()=>{
+  const c=calendarContainer;
+  if(c.scrollTop+c.clientHeight>=c.scrollHeight-300){
+    const last=monthsList[monthsList.length-1];
+    let y=last.year,m=last.month+1;
+    if(m>11){ m=0; y++; }
+    renderMonth(y,m,false);
+  }
+  if(c.scrollTop<=300){
+    const first=monthsList[0];
+    let y=first.year,m=first.month-1;
+    if(m<0){ m=11; y--; }
+    renderMonth(y,m,true);
+  }
+});
+
+// picker
+function setColor(color){
+  if(!selectedDay) return;
+  selectedDay.style.backgroundColor=color;
+  selectedDay.style.border="2px solid transparent";
+  const dayNum=selectedDay.innerText, monthKey=selectedDay.monthKey;
+  const savedColors=JSON.parse(localStorage.getItem(monthKey))||{};
+  savedColors[dayNum]=color;
+  localStorage.setItem(monthKey,JSON.stringify(savedColors));
+  closePicker();
+}
+function removeColor(){
+  if(!selectedDay) return;
+  selectedDay.style.backgroundColor="";
+  selectedDay.style.border="2px solid transparent";
+  const dayNum=selectedDay.innerText, monthKey=selectedDay.monthKey;
+  const savedColors=JSON.parse(localStorage.getItem(monthKey))||{};
+  delete savedColors[dayNum];
+  localStorage.setItem(monthKey,JSON.stringify(savedColors));
+  closePicker();
+}
+function closePicker(){ if(selectedDay) selectedDay.style.border="2px solid transparent"; picker.style.display="none"; selectedDay=null;}
+
+// Scroll automatico del login per pulsante accedi su iPhone
+const passwordInput = document.getElementById("login-password");
+const loginButton = document.querySelector("#login-screen button");
+passwordInput.addEventListener("focus", () => {
+  setTimeout(() => {
+    loginButton.scrollIntoView({behavior:"smooth", block:"center"});
+  }, 300);
+});
+
+// splash
+const splash=document.getElementById("splash-screen");
+const splashIcon=document.getElementById("splash-icon");
+splashIcon.addEventListener("animationend",()=>{
+  splash.style.display="none";
+  document.getElementById("login-screen").style.display="flex";
+  calendarContainer.style.pointerEvents="none";
+  const block=monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth());
+  if(block) block.element.scrollIntoView({behavior:"smooth", block:"start"});
+});
+</script>
+</body>
+</html>
