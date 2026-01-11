@@ -19,18 +19,20 @@
     .close-btn, .remove-btn { margin:5px; padding:5px 12px; cursor:pointer; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
     .close-btn:hover, .remove-btn:hover { background:#ccc;}
     @media (max-width:450px){ .day,.weekday{min-width:35px; min-height:35px; font-size:12px;} .color-btn{width:35px;height:35px;} .month-name{font-size:16px;} }
+
+    /* LOGIN stabile su mobile */
     #login-screen { 
       position:fixed; top:0; left:0; width:100%; height:100%; 
-      background:#f7f7f7; display:flex; justify-content:center; align-items:center; flex-direction:column; 
-      z-index:2000; overflow:auto; /* scroll automatico se tastiera copre */ 
+      background:#f7f7f7; display:block; text-align:center; padding-top:80px; overflow:auto; z-index:2000; 
     }
     #login-password { 
-      padding:8px; font-size:16px; margin-bottom:10px; 
-      -webkit-text-fill-color:#000; /* risolve doppio cursore su iPhone */
-      -webkit-appearance:none;
+      padding:8px; font-size:16px; margin-bottom:10px; width:80%; max-width:300px; 
+      -webkit-text-fill-color:#000; -webkit-appearance:none; caret-color:#000;
     }
-    #login-screen button { padding:10px 16px; font-size:18px; margin-top:8px; cursor:pointer; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
+    #login-screen button { padding:10px 16px; font-size:18px; cursor:pointer; margin-top:8px; border:none; border-radius:5px; background:#ddd; transition:background 0.2s;}
     #login-screen button:hover { background:#ccc; }
+
+    /* SPLASH */
     #splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; display:flex; justify-content:center; align-items:center; z-index:4000; flex-direction: column; }
     @keyframes pulseBig {0%{transform:scale(0.7); opacity:0.5;}50%{transform:scale(1.7); opacity:1;}100%{transform:scale(1); opacity:1;}}
     #splash-icon { animation:pulseBig 1.5s ease-in-out forwards;}
@@ -52,7 +54,7 @@
 <div id="login-screen">
   <h2>Inserisci password</h2>
   <input type="password" id="login-password" placeholder="Password">
-  <button onclick="checkPassword()">Accedi</button>
+  <button id="login-btn">Accedi</button>
   <p id="login-error" style="color:red; display:none;">Password errata</p>
 </div>
 
@@ -71,32 +73,49 @@
 const calendarContainer=document.getElementById("calendar-container");
 const picker=document.getElementById("picker");
 let selectedDay=null;
-const PASSWORD="123";
 
-function checkPassword(){
-  const pass=document.getElementById("login-password").value;
-  const errorMsg=document.getElementById("login-error");
-  const loginScreen=document.getElementById("login-screen");
-  if(pass===PASSWORD){ loginScreen.style.display="none"; calendarContainer.style.pointerEvents="auto"; }
-  else{ errorMsg.style.display="block"; }
+// ===== LOGIN MOBILE/STABILE =====
+const loginScreen = document.getElementById("login-screen");
+const loginBtn = document.getElementById("login-btn");
+const passwordInput = document.getElementById("login-password");
+const PASSWORD = "123";
+calendarContainer.style.pointerEvents='none';
+
+function login() {
+  const pass = passwordInput.value;
+  const errorMsg = document.getElementById("login-error");
+  if(pass===PASSWORD){
+    loginScreen.style.display="none";
+    calendarContainer.style.pointerEvents='auto';
+    passwordInput.blur();
+    errorMsg.style.display='none';
+  } else{
+    errorMsg.style.display='block';
+  }
 }
 
-calendarContainer.style.pointerEvents='none';
-document.addEventListener("visibilitychange",function(){
-  const loginScreen=document.getElementById("login-screen");
+loginBtn.addEventListener("click", login);
+passwordInput.addEventListener("keydown", e => { if(e.key==="Enter") login(); });
+
+// Fix doppio cursore Safari iOS
+passwordInput.addEventListener("focus", () => { 
+  setTimeout(()=>{ passwordInput.scrollIntoView({behavior:"smooth", block:"center"}); },50);
+});
+
+// Riapri login se torni alla pagina
+document.addEventListener("visibilitychange", () => {
   if(document.visibilityState==="visible"){
-    loginScreen.style.display="flex";
-    calendarContainer.style.pointerEvents="none";
-    document.getElementById("login-password").value="";
-    document.getElementById("login-error").style.display="none";
+    loginScreen.style.display='block';
+    calendarContainer.style.pointerEvents='none';
+    passwordInput.value='';
+    document.getElementById("login-error").style.display='none';
   }
 });
 
+// ===== CALENDARIO =====
 const monthNames=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 const weekdays=["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
-let now=new Date();
-let today=new Date(now.getFullYear(), now.getMonth(),1);
-
+const today=new Date();
 let monthsList=[];
 let generatedMonths={};
 
@@ -127,18 +146,17 @@ function renderMonth(year,month,prepend=false){
   for(let i=0;i<offsetDays;i++) monthBlock.appendChild(document.createElement("div"));
 
   const daysInMonth=new Date(year,month+1,0).getDate();
-  const monthKey=key;
-  const savedColors=JSON.parse(localStorage.getItem(monthKey))||{};
+  const savedColors=JSON.parse(localStorage.getItem(key))||{};
 
   for(let i=1;i<=daysInMonth;i++){
     const day=document.createElement("div");
     day.className="day";
     day.innerText=i;
     if(savedColors[i]) day.style.backgroundColor=savedColors[i];
-    day.addEventListener("click",function(){
+    day.addEventListener("click",()=>{
       if(selectedDay) selectedDay.style.border="2px solid transparent";
       selectedDay=day;
-      selectedDay.monthKey=monthKey;
+      selectedDay.monthKey=key;
       selectedDay.style.border="2px solid blue";
       picker.style.display="block";
     });
@@ -149,32 +167,29 @@ function renderMonth(year,month,prepend=false){
   else{ calendarContainer.appendChild(monthBlock); monthsList.push({year,month,element:monthBlock}); }
 }
 
-// generazione infinita intorno al mese corrente
-for(let i=0;i<50;i++){
-  let dPrev=new Date(today.getFullYear(), today.getMonth()-i,1);
-  renderMonth(dPrev.getFullYear(), dPrev.getMonth(), true);
-  let dNext=new Date(today.getFullYear(), today.getMonth()+i,1);
-  renderMonth(dNext.getFullYear(), dNext.getMonth(), false);
-}
+// Generazione mesi
+for(let i=24;i>0;i--){ let d=new Date(today.getFullYear(),today.getMonth()-i,1); renderMonth(d.getFullYear(),d.getMonth(), true);}
+renderMonth(today.getFullYear(),today.getMonth(), false);
+for(let i=1;i<=24;i++){ let d=new Date(today.getFullYear(),today.getMonth()+i,1); renderMonth(d.getFullYear(),d.getMonth(), false);}
 
-// scroll infinito dinamico
+// Scroll infinito
 calendarContainer.addEventListener("scroll",()=>{
   const c=calendarContainer;
   if(c.scrollTop+c.clientHeight>=c.scrollHeight-300){
     const last=monthsList[monthsList.length-1];
     let y=last.year,m=last.month+1;
-    if(m>11){ m=0; y++; }
+    if(m>11){ m=0;y++; }
     renderMonth(y,m,false);
   }
   if(c.scrollTop<=300){
     const first=monthsList[0];
     let y=first.year,m=first.month-1;
-    if(m<0){ m=11; y--; }
+    if(m<0){ m=11;y--; }
     renderMonth(y,m,true);
   }
 });
 
-// picker
+// Picker
 function setColor(color){
   if(!selectedDay) return;
   selectedDay.style.backgroundColor=color;
@@ -197,21 +212,12 @@ function removeColor(){
 }
 function closePicker(){ if(selectedDay) selectedDay.style.border="2px solid transparent"; picker.style.display="none"; selectedDay=null;}
 
-// Scroll automatico del login per pulsante accedi su iPhone
-const passwordInput = document.getElementById("login-password");
-const loginButton = document.querySelector("#login-screen button");
-passwordInput.addEventListener("focus", () => {
-  setTimeout(() => {
-    loginButton.scrollIntoView({behavior:"smooth", block:"center"});
-  }, 300);
-});
-
-// splash
+// Splash
 const splash=document.getElementById("splash-screen");
 const splashIcon=document.getElementById("splash-icon");
 splashIcon.addEventListener("animationend",()=>{
   splash.style.display="none";
-  document.getElementById("login-screen").style.display="flex";
+  document.getElementById("login-screen").style.display="block";
   calendarContainer.style.pointerEvents="none";
   const block=monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth());
   if(block) block.element.scrollIntoView({behavior:"smooth", block:"start"});
