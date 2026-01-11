@@ -249,16 +249,18 @@ listenColorsFirebase(data=>{
   });
 });
 
-// Splash
+// SPLASH con scroll solo quando calendario pronto
+function showLoginAfterReady(){
+  const block = monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth());
+  if(!block) return setTimeout(showLoginAfterReady,50);
+  splash.style.display="none";
+  loginScreen.style.display="block";
+  calendarContainer.style.pointerEvents='none';
+  block.element.scrollIntoView({behavior:"smooth", block:"start"});
+}
 const splash=document.getElementById("splash-screen");
 const splashIcon=document.getElementById("splash-icon");
-splashIcon.addEventListener("animationend",()=>{
-  splash.style.display="none";
-  document.getElementById("login-screen").style.display="block";
-  calendarContainer.style.pointerEvents="none";
-  const block=monthsList.find(m=>m.year===today.getFullYear() && m.month===today.getMonth());
-  if(block) block.element.scrollIntoView({behavior:"smooth", block:"start"});
-});
+splashIcon.addEventListener("animationend", showLoginAfterReady);
 </script>
 </body>
 </html>
